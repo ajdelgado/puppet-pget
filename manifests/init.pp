@@ -23,6 +23,16 @@
 #   Optional only if username is not supplied
 # [*timeout*]
 #   Optional. Specifies the timeout duration. Default is 300 seconds.
+# [*checksum*]
+#   Optional. The checksum type to use when determining whether to replace a file’s contents.
+#   The default checksum type is md5.
+#   Valid values are md5, md5lite, sha224, sha256, sha256lite, sha384, sha512, mtime, ctime, none.
+# [*checksum_value*]
+#   Optional. The checksum of the source contents.
+#   Only md5, sha256, sha224, sha384 and sha512 are supported when specifying this parameter.
+#   If this parameter is set, source_permissions will be assumed to be false, and ownership
+#   and permissions will not be read from source.
+
 #
 # === Examples
 #
@@ -58,7 +68,9 @@ define pget (
   $password       = undef, #: password needed,
   $timeout        = 300,   #: timeout
   $headerHash     = undef, #: additional has parameters for the download of the file, i.e. user-agent, Cookie
-  $overwrite      = false, # : if the target file should be overwritten (if already present)
+  $overwrite      = false, #: if the target file should be overwritten (if already present)
+  $checksum       = 'md5', #: The checksum type to use when determining whether to replace a file’s contents.
+  $checksum_value = undef, #: The checksum of the source contents.
 ) {
   validate_string($source)
   validate_re($source, [
@@ -85,9 +97,11 @@ define pget (
 
   if $source =~ /^puppet/ {
     file{ "Download-${_filename}":
-      ensure => file,
-      path   => $_target_file,
-      source => $source,
+      ensure         => file,
+      path           => $_target_file,
+      source         => $source,
+      checksum       => $checksum,
+      checksum_value => $checksum_value,
     }
   } else{
     validate_re($source,['^s?ftp:','^https?:','^ftps?:'])
